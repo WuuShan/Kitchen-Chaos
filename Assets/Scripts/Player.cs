@@ -3,16 +3,83 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// 玩家逻辑
+/// </summary>
 public class Player : MonoBehaviour
 {
+    /// <summary>
+    /// 移动速度
+    /// </summary>
     [SerializeField] private float moveSpeed = 7f;
+
+    /// <summary>
+    /// 获取玩家的输入
+    /// </summary>
     [SerializeField] private GameInput gameInput;
 
+    /// <summary>
+    /// 柜台图层蒙版，用于射线单一检测
+    /// </summary>
+    [SerializeField] private LayerMask countersLayerMask;
+
+    /// <summary>
+    /// 判断是否在移动中
+    /// </summary>
     private bool isWalking;
+
+    /// <summary>
+    /// 最后一次交互的方向
+    /// </summary>
+    private Vector3 lastInteractDir;
 
     private void Update()
     {
+        HandleMovement();
+        HandleInteractions();
+    }
+
+    /// <summary>
+    /// 获取当前是否在移动中
+    /// </summary>
+    /// <returns></returns>
+    public bool IsWalking()
+    {
+        return isWalking;
+    }
+
+    /// <summary>
+    /// 处理交互逻辑
+    /// </summary>
+    private void HandleInteractions()
+    {
         Vector2 inputVector = gameInput.GetMovementVectorNormalized();
+
+        Vector3 moveDir = new(inputVector.x, 0f, inputVector.y);
+
+        if (moveDir != Vector3.zero)    // 如果没有移动方向的输入
+        {
+            lastInteractDir = moveDir;
+        }
+
+        float interactDistance = 2; // 检测交互的距离
+        if (Physics.Raycast(transform.position, lastInteractDir, out RaycastHit raycastHit, interactDistance, countersLayerMask))
+        {
+            if (raycastHit.transform.TryGetComponent(out ClearCounter clearCounter))
+            {
+                // Has ClearCounter
+                clearCounter.Interact();
+            }
+        }
+    }
+
+    /// <summary>
+    /// 处理移动逻辑
+    /// </summary>
+    private void HandleMovement()
+    {
+        Vector2 inputVector = gameInput.GetMovementVectorNormalized();
+
         Vector3 moveDir = new(inputVector.x, 0f, inputVector.y);
 
         float moveDistance = moveSpeed * Time.deltaTime;    // 移动距离
@@ -58,10 +125,5 @@ public class Player : MonoBehaviour
 
         float rotateSpeed = 10f;
         transform.forward = Vector3.Slerp(transform.forward, moveDir, Time.deltaTime * rotateSpeed);
-    }
-
-    public bool IsWalking()
-    {
-        return isWalking;
     }
 }

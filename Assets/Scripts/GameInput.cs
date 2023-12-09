@@ -2,8 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>
+/// 处理玩家的各种输入
+/// </summary>
 public class GameInput : MonoBehaviour
 {
+    /// <summary>
+    /// 玩家输入操作集
+    /// </summary>
     private PlayerInputActions playerInputActions;
 
     private void Awake()

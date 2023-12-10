@@ -1,12 +1,16 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 /// <summary>
 /// 处理玩家的各种输入
 /// </summary>
 public class GameInput : MonoBehaviour
 {
+    public event EventHandler OnInteractAction;
+
     /// <summary>
     /// 玩家输入操作集
     /// </summary>
@@ -16,6 +20,13 @@ public class GameInput : MonoBehaviour
     {
         playerInputActions = new PlayerInputActions();
         playerInputActions.Player.Enable();
+
+        playerInputActions.Player.Interact.performed += Interact_performed;
+    }
+
+    private void Interact_performed(InputAction.CallbackContext context)
+    {
+        OnInteractAction?.Invoke(this, EventArgs.Empty);
     }
 
     /// <summary>

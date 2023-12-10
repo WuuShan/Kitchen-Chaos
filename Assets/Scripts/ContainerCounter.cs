@@ -2,10 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// 清理柜台的逻辑
-/// </summary>
-public class ClearCounter : BaseCounter
+public class ContainerCounter : BaseCounter
 {
     [SerializeField] private KitchenObjectSO kitchenObjectSO;
 
@@ -14,5 +11,7 @@ public class ClearCounter : BaseCounter
     /// </summary>
     public override void Interact(Player player)
     {
+        Transform kitchenObjectTransform = Instantiate(kitchenObjectSO.prefab);
+        kitchenObjectTransform.GetComponent<KitchenObject>().SetKitchenObjectParent(this);
     }
 }

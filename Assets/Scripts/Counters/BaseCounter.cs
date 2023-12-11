@@ -20,9 +20,13 @@ public class BaseCounter : MonoBehaviour, IKitchenObjectParent
         Debug.LogError("BaseCounter.Interact();");
     }
 
+    /// <summary>
+    /// 副交互逻辑
+    /// </summary>
+    /// <param name="player"></param>
     public virtual void InteractAlternate(Player player)
     {
-        Debug.LogError("BaseCounter.InteractAlternate();");
+        // Debug.LogError("BaseCounter.InteractAlternate();");
     }
 
     public Transform GetKitchenObjectFollowTransform()

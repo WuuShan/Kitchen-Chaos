@@ -11,9 +11,18 @@ public class BaseCounter : MonoBehaviour, IKitchenObjectParent
     /// </summary>
     protected KitchenObject kitchenObject;
 
+    /// <summary>
+    /// 交互逻辑
+    /// </summary>
+    /// <param name="player"></param>
     public virtual void Interact(Player player)
     {
         Debug.LogError("BaseCounter.Interact();");
+    }
+
+    public virtual void InteractAlternate(Player player)
+    {
+        Debug.LogError("BaseCounter.InteractAlternate();");
     }
 
     public Transform GetKitchenObjectFollowTransform()

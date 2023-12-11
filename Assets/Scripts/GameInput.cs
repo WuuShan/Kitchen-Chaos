@@ -9,7 +9,12 @@ using UnityEngine.InputSystem;
 /// </summary>
 public class GameInput : MonoBehaviour
 {
+    /// <summary>
+    /// 交互操作事件
+    /// </summary>
     public event EventHandler OnInteractAction;
+
+    public event EventHandler OnInteractAlternateAction;
 
     /// <summary>
     /// 玩家输入操作集
@@ -22,6 +27,12 @@ public class GameInput : MonoBehaviour
         playerInputActions.Player.Enable();
 
         playerInputActions.Player.Interact.performed += Interact_performed;
+        playerInputActions.Player.InteractAlternate.performed += InteractAlternate_performed;
+    }
+
+    private void InteractAlternate_performed(InputAction.CallbackContext context)
+    {
+        OnInteractAlternateAction?.Invoke(this, EventArgs.Empty);
     }
 
     private void Interact_performed(InputAction.CallbackContext context)

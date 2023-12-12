@@ -8,6 +8,10 @@ public class KitchenObject : MonoBehaviour
 
     private IKitchenObjectParent kitchenObjectParent;
 
+    /// <summary>
+    /// 获得厨房物品数据
+    /// </summary>
+    /// <returns></returns>
     public KitchenObjectSO GetKitchenObjectSO()
     {
         return kitchenObjectSO;
@@ -39,6 +43,9 @@ public class KitchenObject : MonoBehaviour
         return kitchenObjectParent;
     }
 
+    /// <summary>
+    /// 销毁厨房物品
+    /// </summary>
     public void DestroySelf()
     {
         kitchenObjectParent.ClearKitchenObject();
@@ -46,6 +53,12 @@ public class KitchenObject : MonoBehaviour
         Destroy(gameObject);
     }
 
+    /// <summary>
+    /// 生成厨房物品并挂载到厨房物品父级
+    /// </summary>
+    /// <param name="kitchenObjectSO"></param>
+    /// <param name="kitchenObjectParent"></param>
+    /// <returns></returns>
     public static KitchenObject SpawnKitchenObject(KitchenObjectSO kitchenObjectSO, IKitchenObjectParent kitchenObjectParent)
     {
         Transform kitchenObjectTransform = Instantiate(kitchenObjectSO.prefab);
@@ -55,5 +68,19 @@ public class KitchenObject : MonoBehaviour
         kitchenObject.SetKitchenObjectParent(kitchenObjectParent);
 
         return kitchenObject;
+    }
+
+    public bool TryGetPlate(out PlateKitchenObject plateKitchenObject)
+    {
+        if (this is PlateKitchenObject)
+        {
+            plateKitchenObject = this as PlateKitchenObject;
+            return true;
+        }
+        else
+        {
+            plateKitchenObject = null;
+            return false;
+        }
     }
 }

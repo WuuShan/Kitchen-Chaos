@@ -78,6 +78,11 @@ public class CuttingCounter : BaseCounter, IHasProgress
         }
     }
 
+    /// <summary>
+    /// 判断该厨房物品数据是否有切割配方数据
+    /// </summary>
+    /// <param name="inputKitchenObjectSO"></param>
+    /// <returns></returns>
     private bool HasRecipeWithInput(KitchenObjectSO inputKitchenObjectSO)
     {
         CuttingRecipeSO cuttingRecipeSO = GetCuttingRecipeSOWithInput(inputKitchenObjectSO);
@@ -85,6 +90,11 @@ public class CuttingCounter : BaseCounter, IHasProgress
         return cuttingRecipeSO != null;
     }
 
+    /// <summary>
+    /// 根据厨房物品数据获得对应切好的厨房物品数据
+    /// </summary>
+    /// <param name="inputKitchenObjectSO"></param>
+    /// <returns></returns>
     private KitchenObjectSO GetOutputForInput(KitchenObjectSO inputKitchenObjectSO)
     {
         CuttingRecipeSO cuttingRecipeSO = GetCuttingRecipeSOWithInput(inputKitchenObjectSO);
@@ -99,6 +109,11 @@ public class CuttingCounter : BaseCounter, IHasProgress
         }
     }
 
+    /// <summary>
+    /// 通过厨房物品数据获得对应的切割配方数据
+    /// </summary>
+    /// <param name="inputKitchenObjectSO">厨房物品</param>
+    /// <returns></returns>
     private CuttingRecipeSO GetCuttingRecipeSOWithInput(KitchenObjectSO inputKitchenObjectSO)
     {
         foreach (CuttingRecipeSO cuttingRecipeSO in cuttingRecipeSOArray)

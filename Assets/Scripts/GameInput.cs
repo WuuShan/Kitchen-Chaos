@@ -9,12 +9,16 @@ using UnityEngine.InputSystem;
 /// </summary>
 public class GameInput : MonoBehaviour
 {
+    public static GameInput Instance { get; private set; }
+
     /// <summary>
     /// 交互操作事件
     /// </summary>
     public event EventHandler OnInteractAction;
 
     public event EventHandler OnInteractAlternateAction;
+
+    public event EventHandler OnPauseAction;
 
     /// <summary>
     /// 玩家输入操作集
@@ -23,11 +27,28 @@ public class GameInput : MonoBehaviour
 
     private void Awake()
     {
+        Instance = this;
+
         playerInputActions = new PlayerInputActions();
         playerInputActions.Player.Enable();
 
         playerInputActions.Player.Interact.performed += Interact_performed;
         playerInputActions.Player.InteractAlternate.performed += InteractAlternate_performed;
+        playerInputActions.Player.Pause.performed += Pause_performed;
+    }
+
+    private void OnDestroy()
+    {
+        playerInputActions.Player.Interact.performed -= Interact_performed;
+        playerInputActions.Player.InteractAlternate.performed -= InteractAlternate_performed;
+        playerInputActions.Player.Pause.performed -= Pause_performed;
+
+        playerInputActions.Player.Disable();
+    }
+
+    private void Pause_performed(InputAction.CallbackContext context)
+    {
+        OnPauseAction?.Invoke(this, EventArgs.Empty);
     }
 
     private void InteractAlternate_performed(InputAction.CallbackContext context)

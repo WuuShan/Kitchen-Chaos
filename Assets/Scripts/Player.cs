@@ -1,16 +1,35 @@
 using System;
 using UnityEngine;
+using Unity.Netcode;
 
 /// <summary>
 /// 玩家逻辑
 /// </summary>
-public class Player : MonoBehaviour, IKitchenObjectParent
+public class Player : NetworkBehaviour, IKitchenObjectParent
 {
+    /// <summary>
+    /// 任意玩家生成事件
+    /// </summary>
+    public static event EventHandler OnAnyPlayerSpawned;
+
+    /// <summary>
+    /// 任意拾取东西事件
+    /// </summary>
+    public static event EventHandler OnAnyPickedSomething;
+
+    public static void ResetStaticData()
+    {
+        OnAnyPlayerSpawned = null;
+    }
+
     /// <summary>
     /// 玩家实例
     /// </summary>
-    public static Player Instance { get; private set; }
+    public static Player LocalInstance { get; private set; }
 
+    /// <summary>
+    /// 拾取东西事件
+    /// </summary>
     public event EventHandler OnPickedSomething;
 
     /// <summary>
@@ -32,11 +51,6 @@ public class Player : MonoBehaviour, IKitchenObjectParent
     [SerializeField] private float moveSpeed = 7f;
 
     /// <summary>
-    /// 获取玩家的输入
-    /// </summary>
-    [SerializeField] private GameInput gameInput;
-
-    /// <summary>
     /// 柜台图层蒙版，用于射线单一检测
     /// </summary>
     [SerializeField] private LayerMask countersLayerMask;
@@ -56,22 +70,32 @@ public class Player : MonoBehaviour, IKitchenObjectParent
     /// </summary>
     private Vector3 lastInteractDir;
 
+    /// <summary>
+    /// 玩家选中的柜台
+    /// </summary>
     private BaseCounter selectedCounter;
+
+    /// <summary>
+    /// 玩家拾取的厨房物品
+    /// </summary>
     private KitchenObject kitchenObject;
 
-    private void Awake()
+    /// <summary>
+    /// 当 <see cref="NetworkObject"/> 生成时被调用，消息处理程序已准备好注册并且网络已设置。
+    /// </summary>
+    public override void OnNetworkSpawn()
     {
-        if (Instance != null)
+        if (IsOwner)
         {
-            Debug.LogError("有多个Player实例");
+            LocalInstance = this;
         }
-        Instance = this;
+        OnAnyPlayerSpawned?.Invoke(this, EventArgs.Empty);
     }
 
     private void Start()
     {
-        gameInput.OnInteractAction += GameInput_OnInteractAction;
-        gameInput.OnInteractAlternateAction += GameInput_OnInteractAlternateAction;
+        GameInput.Instance.OnInteractAction += GameInput_OnInteractAction;
+        GameInput.Instance.OnInteractAlternateAction += GameInput_OnInteractAlternateAction;
     }
 
     private void GameInput_OnInteractAlternateAction(object sender, EventArgs e)
@@ -102,6 +126,10 @@ public class Player : MonoBehaviour, IKitchenObjectParent
 
     private void Update()
     {
+        if (!IsOwner)
+        {
+            return;
+        }
         HandleMovement();
         HandleInteractions();
     }
@@ -120,7 +148,7 @@ public class Player : MonoBehaviour, IKitchenObjectParent
     /// </summary>
     private void HandleInteractions()
     {
-        Vector2 inputVector = gameInput.GetMovementVectorNormalized();
+        Vector2 inputVector = GameInput.Instance.GetMovementVectorNormalized();
 
         Vector3 moveDir = new(inputVector.x, 0f, inputVector.y);
 
@@ -156,7 +184,7 @@ public class Player : MonoBehaviour, IKitchenObjectParent
     /// </summary>
     private void HandleMovement()
     {
-        Vector2 inputVector = gameInput.GetMovementVectorNormalized();
+        Vector2 inputVector = GameInput.Instance.GetMovementVectorNormalized();
 
         Vector3 moveDir = new(inputVector.x, 0f, inputVector.y);
 
@@ -224,6 +252,7 @@ public class Player : MonoBehaviour, IKitchenObjectParent
         if (kitchenObject != null)
         {
             OnPickedSomething?.Invoke(this, EventArgs.Empty);
+            OnAnyPickedSomething?.Invoke(this, EventArgs.Empty);
         }
     }
 
@@ -240,5 +269,10 @@ public class Player : MonoBehaviour, IKitchenObjectParent
     public bool HasKitchenObject()
     {
         return kitchenObject != null;
+    }
+
+    public NetworkObject GetNetworkObject()
+    {
+        return NetworkObject;
     }
 }

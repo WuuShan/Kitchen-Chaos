@@ -6,6 +6,12 @@ public class KitchenObject : NetworkBehaviour
     [SerializeField] private KitchenObjectSO kitchenObjectSO;
 
     private IKitchenObjectParent kitchenObjectParent;
+    private FollowTransform followTransform;
+
+    protected virtual void Awake()
+    {
+        followTransform = GetComponent<FollowTransform>();
+    }
 
     /// <summary>
     /// 获得厨房物品数据
@@ -22,19 +28,33 @@ public class KitchenObject : NetworkBehaviour
     /// <param name="kitchenObjectParent"></param>
     public void SetKitchenObjectParent(IKitchenObjectParent kitchenObjectParent)
     {
+        SetKitchenObjectParentServerRpc(kitchenObjectParent.GetNetworkObject());
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void SetKitchenObjectParentServerRpc(NetworkObjectReference kitchenObjectParentNetworkObjectReference)
+    {
+        SetKitchenObjectParentClientRpc(kitchenObjectParentNetworkObjectReference);
+    }
+
+    [ClientRpc]
+    private void SetKitchenObjectParentClientRpc(NetworkObjectReference kitchenObjectParentNetworkObjectReference)
+    {
+        kitchenObjectParentNetworkObjectReference.TryGet(out NetworkObject kitchenObjectParentNetworkObject);
+        IKitchenObjectParent kitchenObjectParent = kitchenObjectParentNetworkObject.GetComponent<IKitchenObjectParent>();
+
         this.kitchenObjectParent?.ClearKitchenObject();
 
         this.kitchenObjectParent = kitchenObjectParent;
 
         if (kitchenObjectParent.HasKitchenObject())
         {
-            Debug.LogError("柜台已经有一个厨房物品！");
+            Debug.LogError("拾取对象已经有一个厨房物品！");
         }
 
         kitchenObjectParent.SetKitchenObject(this);
 
-        //transform.parent = kitchenObjectParent.GetKitchenObjectFollowTransform();
-        //transform.localPosition = Vector3.zero;
+        followTransform.SetTargetTransform(kitchenObjectParent.GetKitchenObjectFollowTransform());
     }
 
     public IKitchenObjectParent GetKitchenObjectParent()
@@ -47,21 +67,19 @@ public class KitchenObject : NetworkBehaviour
     /// </summary>
     public void DestroySelf()
     {
-        kitchenObjectParent.ClearKitchenObject();
-
         Destroy(gameObject);
     }
 
-    /// <summary>
-    /// 生成厨房物品并挂载到厨房物品父级
-    /// </summary>
-    /// <param name="kitchenObjectSO"></param>
-    /// <param name="kitchenObjectParent"></param>
-    public static void SpawnKitchenObject(KitchenObjectSO kitchenObjectSO, IKitchenObjectParent kitchenObjectParent)
+    public void ClearKitchenObjectOnParent()
     {
-        KitchenGameMultiplayer.Instance.SpawnKitchenObject(kitchenObjectSO, kitchenObjectParent);
+        kitchenObjectParent.ClearKitchenObject();
     }
 
+    /// <summary>
+    /// 判断该物品是否为盘子并返回
+    /// </summary>
+    /// <param name="plateKitchenObject"></param>
+    /// <returns></returns>
     public bool TryGetPlate(out PlateKitchenObject plateKitchenObject)
     {
         if (this is PlateKitchenObject)
@@ -74,5 +92,20 @@ public class KitchenObject : NetworkBehaviour
             plateKitchenObject = null;
             return false;
         }
+    }
+
+    /// <summary>
+    /// 生成厨房物品并挂载到厨房物品父级
+    /// </summary>
+    /// <param name="kitchenObjectSO"></param>
+    /// <param name="kitchenObjectParent"></param>
+    public static void SpawnKitchenObject(KitchenObjectSO kitchenObjectSO, IKitchenObjectParent kitchenObjectParent)
+    {
+        KitchenGameMultiplayer.Instance.SpawnKitchenObject(kitchenObjectSO, kitchenObjectParent);
+    }
+
+    public static void DestroyKitchenObject(KitchenObject kitchenObject)
+    {
+        KitchenGameMultiplayer.Instance.DestroyKitchenObject(kitchenObject);
     }
 }

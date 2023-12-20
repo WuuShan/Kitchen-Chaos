@@ -36,7 +36,6 @@ public class KitchenGameMultiplayer : NetworkBehaviour
         IKitchenObjectParent kitchenObjectParent = kitchenObjectParentNetworkObject.GetComponent<IKitchenObjectParent>();
 
         kitchenObject.SetKitchenObjectParent(kitchenObjectParent);
-        Debug.Log(kitchenObjectParent);
     }
 
     /// <summary>

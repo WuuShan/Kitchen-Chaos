@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using Unity.Netcode;
+using System.Collections.Generic;
 
 /// <summary>
 /// 玩家逻辑
@@ -55,10 +56,14 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
     /// </summary>
     [SerializeField] private LayerMask countersLayerMask;
 
+    [SerializeField] private LayerMask collisionsLayerMask;
+
     /// <summary>
     /// 厨房物品拿住位置
     /// </summary>
     [SerializeField] private Transform kitchenObjectHoldPoint;
+
+    [SerializeField] private List<Vector3> spawnPositionList;
 
     /// <summary>
     /// 判断是否在移动中
@@ -89,7 +94,23 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
         {
             LocalInstance = this;
         }
+
+        transform.position = spawnPositionList[(int)OwnerClientId];
+
         OnAnyPlayerSpawned?.Invoke(this, EventArgs.Empty);
+
+        if (IsServer)
+        {
+            NetworkManager.Singleton.OnClientDisconnectCallback += NetworkManager_OnClientDisconnectCallback;
+        }
+    }
+
+    private void NetworkManager_OnClientDisconnectCallback(ulong clientId)
+    {
+        if (clientId == OwnerClientId && HasKitchenObject())
+        {
+            KitchenObject.DestroyKitchenObject(GetKitchenObject());
+        }
     }
 
     private void Start()
@@ -190,17 +211,17 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
 
         float moveDistance = moveSpeed * Time.deltaTime;    // 移动距离
         float playerRadius = 0.7f;  // 胶囊体的半径。
-        float playerHeight = 2f;    // 胶囊体的高度。
-        bool canMove = !Physics.CapsuleCast(                // 创建胶囊体投射出去扫描
+        bool canMove = !Physics.BoxCast(                // 创建胶囊体投射出去检测
             transform.position,                             // 胶囊体在 start 处的球体中心。
-            transform.position + Vector3.up * playerHeight, // 胶囊体在 end 处的球体中心。
-            playerRadius, moveDir, moveDistance);           // 扫描胶囊体的半径、方向、最大距离。
+            Vector3.one * playerRadius, // 胶囊体在 end 处的球体中心。
+            moveDir, Quaternion.identity, moveDistance,            // 检测胶囊体的半径、方向、最大距离。
+            collisionsLayerMask);                           // 检测的目标图层蒙版
 
         if (!canMove)   // 无法朝移动方向移动
         {
             // 尝试在 X 轴上移动
             Vector3 moveDirX = new Vector3(moveDir.x, 0, 0).normalized;
-            canMove = (moveDir.x < -0.5f || moveDir.x > 0.5f) && !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight, playerRadius, moveDirX, moveDistance);
+            canMove = (moveDir.x < -0.5f || moveDir.x > 0.5f) && !Physics.BoxCast(transform.position, Vector3.one * playerRadius, moveDirX, Quaternion.identity, moveDistance, collisionsLayerMask);
 
             if (canMove)    // 只能在 X 轴上移动
             {
@@ -210,7 +231,7 @@ public class Player : NetworkBehaviour, IKitchenObjectParent
             {
                 // 尝试在 Z 轴上移动
                 Vector3 moveDirZ = new Vector3(0, 0, moveDir.z).normalized;
-                canMove = (moveDir.z < -0.5f || moveDir.z > 0.5f) && !Physics.CapsuleCast(transform.position, transform.position + Vector3.up * playerHeight, playerRadius, moveDirZ, moveDistance);
+                canMove = (moveDir.z < -0.5f || moveDir.z > 0.5f) && !Physics.BoxCast(transform.position, Vector3.one * playerRadius, moveDirZ, Quaternion.identity, moveDistance, collisionsLayerMask);
 
                 if (canMove)    // 只能在 Z 轴上移动
                 {

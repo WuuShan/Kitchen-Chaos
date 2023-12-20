@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
 /// <summary>
@@ -39,24 +40,37 @@ public class PlateKitchenObject : KitchenObject
     /// <returns></returns>
     public bool TryAddIngredient(KitchenObjectSO kitchenObjectSO)
     {
-        if (!validKitchenObjectSOList.Contains(kitchenObjectSO))
+        if (!validKitchenObjectSOList.Contains(kitchenObjectSO))    // 不是食谱中的配菜
         {
-            // Not a valid ingredient
             return false;
         }
-        if (kitchenObjectSOList.Contains(kitchenObjectSO))
+        if (kitchenObjectSOList.Contains(kitchenObjectSO))  // 已经包含该配菜
         {
-            // Already has this type
             return false;
         }
         else
         {
-            kitchenObjectSOList.Add(kitchenObjectSO);
-
-            OnIngredientAdded?.Invoke(this, new() { kitchenObjectSO = kitchenObjectSO });
+            int kitchenObjectSOIndex = KitchenGameMultiplayer.Instance.GetKitchenObjectSOIndex(kitchenObjectSO);
+            AddIngredientServerRpc(kitchenObjectSOIndex);
 
             return true;
         }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void AddIngredientServerRpc(int kitchenObjectSOIndex)
+    {
+        AddIngredientClientRpc(kitchenObjectSOIndex);
+    }
+
+    [ClientRpc]
+    private void AddIngredientClientRpc(int kitchenObjectSOIndex)
+    {
+        KitchenObjectSO kitchenObjectSO = KitchenGameMultiplayer.Instance.GetKitchenObjectSOFromIndex(kitchenObjectSOIndex);
+
+        kitchenObjectSOList.Add(kitchenObjectSO);
+
+        OnIngredientAdded?.Invoke(this, new() { kitchenObjectSO = kitchenObjectSO });
     }
 
     public List<KitchenObjectSO> GetKitchenObjectSOList()
